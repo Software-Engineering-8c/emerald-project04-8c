@@ -886,6 +886,9 @@
           },
           "activity_template": {
             "type": "string"
+          },
+          "rubric": {
+            "type": "object"
           }
         }
       },
@@ -930,6 +933,9 @@
           },
           "activity_template": {
             "type": "string"
+          },
+          "rubric": {
+            "type": "object"
           },
           "created_by": {
             "type": "string"

@@ -613,6 +613,9 @@
                 "last_logged_in": {
                   "type": "string"
                 },
+                "Score": {
+                  "type": "number"
+                },
                 "created_by": {
                   "type": "string"
                 },

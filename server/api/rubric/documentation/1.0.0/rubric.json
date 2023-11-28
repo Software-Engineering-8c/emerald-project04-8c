@@ -1,6 +1,6 @@
 {
   "paths": {
-    "/lesson-modules": {
+    "/rubrics": {
       "get": {
         "deprecated": false,
         "description": "",
@@ -10,10 +10,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "foo": {
-                      "type": "string"
-                    }
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Rubric"
                   }
                 }
               }
@@ -52,7 +51,7 @@
         },
         "summary": "",
         "tags": [
-          "Lesson-module"
+          "Rubric"
         ],
         "parameters": [
           {
@@ -202,11 +201,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "foo": {
-                      "type": "string"
-                    }
-                  }
+                  "$ref": "#/components/schemas/Rubric"
                 }
               }
             }
@@ -244,7 +239,7 @@
         },
         "summary": "",
         "tags": [
-          "Lesson-module"
+          "Rubric"
         ],
         "requestBody": {
           "description": "",
@@ -252,14 +247,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewLesson-module"
+                "$ref": "#/components/schemas/NewRubric"
               }
             }
           }
         }
       }
     },
-    "/lesson-modules/count": {
+    "/rubrics/count": {
       "get": {
         "deprecated": false,
         "description": "",
@@ -270,8 +265,8 @@
               "application/json": {
                 "schema": {
                   "properties": {
-                    "foo": {
-                      "type": "string"
+                    "count": {
+                      "type": "integer"
                     }
                   }
                 }
@@ -311,12 +306,12 @@
         },
         "summary": "",
         "tags": [
-          "Lesson-module"
+          "Rubric"
         ],
         "parameters": []
       }
     },
-    "/lesson-modules/{id}": {
+    "/rubrics/{id}": {
       "get": {
         "deprecated": false,
         "description": "",
@@ -326,11 +321,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "foo": {
-                      "type": "string"
-                    }
-                  }
+                  "$ref": "#/components/schemas/Rubric"
                 }
               }
             }
@@ -368,7 +359,7 @@
         },
         "summary": "",
         "tags": [
-          "Lesson-module"
+          "Rubric"
         ],
         "parameters": [
           {
@@ -392,11 +383,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "properties": {
-                    "foo": {
-                      "type": "string"
-                    }
-                  }
+                  "$ref": "#/components/schemas/Rubric"
                 }
               }
             }
@@ -434,7 +421,7 @@
         },
         "summary": "",
         "tags": [
-          "Lesson-module"
+          "Rubric"
         ],
         "requestBody": {
           "description": "",
@@ -442,7 +429,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/NewLesson-module"
+                "$ref": "#/components/schemas/NewRubric"
               }
             }
           }
@@ -508,7 +495,7 @@
         },
         "summary": "",
         "tags": [
-          "Lesson-module"
+          "Rubric"
         ],
         "parameters": [
           {
@@ -527,115 +514,62 @@
   },
   "components": {
     "schemas": {
-      "Lesson-module": {
+      "Rubric": {
         "required": [
-          "id",
-          "number",
-          "name"
+          "id"
         ],
         "properties": {
           "id": {
             "type": "string"
           },
-          "number": {
-            "type": "number"
-          },
-          "name": {
-            "type": "string"
-          },
-          "expectations": {
-            "type": "string"
-          },
-          "activities": {
-            "type": "array",
-            "items": {
-              "required": [
-                "id",
-                "number",
-                "template"
-              ],
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "lesson_module": {
-                  "type": "string"
-                },
-                "number": {
-                  "type": "integer"
-                },
-                "template": {
-                  "type": "string"
-                },
-                "blocks": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "description": {
-                  "type": "string"
-                },
-                "StandardS": {
-                  "type": "string"
-                },
-                "images": {
-                  "type": "string"
-                },
-                "link": {
-                  "type": "string"
-                },
-                "learning_components": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
-                },
-                "activity_template": {
-                  "type": "string"
-                },
-                "rubric": {
-                  "type": "object"
-                },
-                "created_by": {
-                  "type": "string"
-                },
-                "updated_by": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "unit": {
+          "activity": {
             "required": [
               "id",
-              "name",
-              "number"
+              "number",
+              "template"
             ],
             "properties": {
               "id": {
                 "type": "string"
               },
-              "grade": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "standards_id": {
-                "type": "string"
-              },
-              "standards_description": {
+              "lesson_module": {
                 "type": "string"
               },
               "number": {
                 "type": "integer"
               },
-              "lesson_modules": {
+              "template": {
+                "type": "string"
+              },
+              "blocks": {
                 "type": "array",
                 "items": {
                   "type": "string"
                 }
+              },
+              "description": {
+                "type": "string"
+              },
+              "StandardS": {
+                "type": "string"
+              },
+              "images": {
+                "type": "string"
+              },
+              "link": {
+                "type": "string"
+              },
+              "learning_components": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "activity_template": {
+                "type": "string"
+              },
+              "rubric": {
+                "type": "object"
               },
               "created_by": {
                 "type": "string"
@@ -645,43 +579,38 @@
               }
             }
           },
-          "standards": {
-            "type": "string"
+          "Rubric_Object": {
+            "type": "object"
           },
-          "link": {
-            "type": "string"
+          "Rubric_Rating": {
+            "type": "integer"
+          },
+          "Rubric_Criteria": {
+            "type": "integer"
+          },
+          "published_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
-      "NewLesson-module": {
-        "required": [
-          "number",
-          "name"
-        ],
+      "NewRubric": {
         "properties": {
-          "number": {
-            "type": "number"
-          },
-          "name": {
+          "activity": {
             "type": "string"
           },
-          "expectations": {
-            "type": "string"
+          "Rubric_Object": {
+            "type": "object"
           },
-          "activities": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "Rubric_Rating": {
+            "type": "integer"
           },
-          "unit": {
-            "type": "string"
+          "Rubric_Criteria": {
+            "type": "integer"
           },
-          "standards": {
-            "type": "string"
-          },
-          "link": {
-            "type": "string"
+          "published_at": {
+            "type": "string",
+            "format": "date-time"
           },
           "created_by": {
             "type": "string"
@@ -693,5 +622,9 @@
       }
     }
   },
-  "tags": []
+  "tags": [
+    {
+      "name": "Rubric"
+    }
+  ]
 }

@@ -116,6 +116,15 @@ const MentorActivityDetailModal = ({
         return
       }
     }
+    const rubricData = {
+      numberOfCriteria: criteriaNum,
+      criteria: Array.from({ length: criteriaNum }, (_, index) => ({
+        name: criteriaNames[index] || `Criteria ${index + 1}`,
+        numberOfRating: ratingNum,
+        ratings: Array.from({ length: ratingNum }, (_, i) => data[index][`rating_${i + 1}`] || ''),
+      })),
+    };
+
     setLinkError(false)
     const res = await updateActivityDetails(
       selectActivity.id,
@@ -126,7 +135,8 @@ const MentorActivityDetailModal = ({
       link,
       scienceComponents,
       makingComponents,
-      computationComponents
+      computationComponents,
+        rubricData,
     )
     if (res.err) {
       message.error(res.err)
