@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Form, Input, Popconfirm, Switch, Table } from 'antd';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import StudentModal from './StudentModal';
+import Feedback from './Feedback';
 import Picker from 'emoji-picker-react';
 
 export default function ListView(props) {
@@ -194,9 +195,22 @@ export default function ListView(props) {
             onClick={() => edit(record)}
           >
             Edit
-          </button>
-        );
+          </button>);
       },
+    },
+    {
+      title: 'Feedback',
+      dataIndex: 'feedback',
+      key: 'feedback',
+      width: '15%',
+      align: 'center',
+      render: (_, record) => (
+        <Feedback
+          student={record}
+          linkBtn={true}
+          getFormattedDate={getFormattedDate}
+        />
+      ),
     },
     {
       title: 'Delete',
