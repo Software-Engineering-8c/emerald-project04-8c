@@ -9,6 +9,9 @@ import PlotterModal from '../modals/PlotterModal';
 import DisplayDiagramModal from '../modals/DisplayDiagramModal'
 import VersionHistoryModal from '../modals/VersionHistoryModal';
 import StudentRubricModal from '../modals/StudentRuBricModal';
+import ViewFeedbackModal from '../modals/ViewFeedbackModal';
+
+
 import {
   connectToPort,
   handleCloseConnection,
@@ -392,6 +395,9 @@ export default function StudentCanvas({ activity }) {
       </Menu.Item>
       <Menu.Item>
         <StudentRubricModal title={'Rubric'} workspaceRef={workspaceRef.current} act={activity}/>
+      </Menu.Item>
+      <Menu.Item>
+        <ViewFeedbackModal title={'Feedback'} workspaceRef={workspaceRef.current} act={activity}/>
       </Menu.Item>
     </Menu>
   );
