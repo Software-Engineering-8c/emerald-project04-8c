@@ -1,3 +1,5 @@
+import xtype from 'xtypejs'
+
 import React, { useEffect, useRef, useState, useReducer } from 'react';
 import '../../ActivityLevels.less';
 import { compileArduinoCode, getArduino, handleSave } from '../../Utils/helpers';
@@ -15,6 +17,7 @@ import {
 } from '../../Utils/consoleHelpers';
 import ArduinoLogo from '../Icons/ArduinoLogo';
 import ArduinoVerify from '../Icons/ArduinoVerify';
+import AutoSubmit from '../Icons/AutoSubmit';
 import PlotterLogo from '../Icons/PlotterLogo';
 import { useNavigate } from 'react-router-dom';
 
@@ -25,6 +28,7 @@ export default function StudentCanvas({ activity }) {
   const [hoverUndo, setHoverUndo] = useState(false);
   const [hoverRedo, setHoverRedo] = useState(false);
   const [hoverVerify, setHoverVerify] = useState(false);
+  const [hoverAutoSub, setHoverAutoSub] = useState(false);
   const [hoverCompile, setHoverCompile] = useState(false);
   const [hoverImage, setHoverImage] = useState(false);
   const [hoverConsole, setHoverConsole] = useState(false);
@@ -300,26 +304,195 @@ export default function StudentCanvas({ activity }) {
       setShowPlotter(false);
     }
   };
+  const handleAutoSub = async () => {
+    /* =========================== PLACE HOLDER =========================== */
+    // The following code contains placeholders for what will eventually be filled in by variables that store
+    // data in the backend.
+    // These variables store the number of input and output variables.
+    const numOfDigIn  = 20;
+    const numOfInt    = 2;
+    const numOfDigOut = 20;
+    const numOfPWM    = 6;
+    const numOfAnIn   = 6;
+    /* =========================== PLACE HOLDER =========================== */
+    
+    // The following variable stores the code as a string
+    let arduinoCode = getArduino(workspaceRef.current, false);
+    // Print arduinoCode string
+    console.log(arduinoCode);
+    // Print the arduinoCode variable type
+      //console.log(xtype(arduinoCode));
+    //Split the string arduinoCode, into an array of characters
+      //arduinoCode.split("").forEach(character => console.log(character));
+    
+    // The following two lines split the string into two sections with the divide being the desired string.
+      //const firstPart = arduinoCode.substring(0,target);
+      //const secondPart = arduinoCode.substring(target + toSearch.length, arduinoCode.length)
+
+    // First look for number of digital inputs
+    var digInCount = -1;
+    let target = -1;
+    do {
+      // String to search for, returns -1 if not found, CURRENTLY CASE SENSITIVE AND PICKUPS COMMENTS
+      let toSearch="INPUT);"
+      // Store the index of the found string
+      target = arduinoCode.indexOf(toSearch);
+      // Store only the desired string
+      let stringFound = arduinoCode.substring(target, target+toSearch.length);
+      arduinoCode = arduinoCode.replace(stringFound, "");
+      //console.log(target);
+      //console.log(stringFound);
+      
+      digInCount++;
+    }
+    while (target != -1);
+
+    // Next look for number of interrupts
+    let interruptCount = -1;
+    do {
+      // String to search for, returns -1 if not found, CURRENTLY CASE SENSITIVE AND PICKUPS COMMENTS
+      let toSearch="attachInterrupt("
+      // Store the index of the found string
+      target = arduinoCode.indexOf(toSearch);
+      // Store only the desired string
+      let stringFound = arduinoCode.substring(target, target+toSearch.length);
+      arduinoCode = arduinoCode.replace(stringFound, "");
+      //console.log(target);
+      //console.log(stringFound);
+      
+      interruptCount++;
+    }
+    while (target != -1);
+
+    // Next look for number of digital outputs
+    let digOutCount = -1;
+    do {
+      // String to search for, returns -1 if not found, CURRENTLY CASE SENSITIVE AND PICKUPS COMMENTS
+      let toSearch="OUTPUT);"
+      // Store the index of the found string
+      target = arduinoCode.indexOf(toSearch);
+      // Store only the desired string
+      let stringFound = arduinoCode.substring(target, target+toSearch.length);
+      arduinoCode = arduinoCode.replace(stringFound, "");
+      //console.log(target);
+      //console.log(stringFound);
+      
+      digOutCount++;
+    }
+    while (target != -1);
+
+    // Next look for number of PWM outputs
+    let PWMCount = -1;
+    do {
+      // String to search for, returns -1 if not found, CURRENTLY CASE SENSITIVE AND PICKUPS COMMENTS
+      let toSearch="analogWrite("
+      // Store the index of the found string
+      target = arduinoCode.indexOf(toSearch);
+      // Store only the desired string
+      let stringFound = arduinoCode.substring(target, target+toSearch.length);
+      arduinoCode = arduinoCode.replace(stringFound, "");
+      //console.log(target);
+      //console.log(stringFound);
+      
+      PWMCount++;
+    }
+    while (target != -1);
+
+    // Next look for number of analog inputs
+    let analogCount = -1;
+    do {
+      // String to search for, returns -1 if not found, CURRENTLY CASE SENSITIVE AND PICKUPS COMMENTS
+      let toSearch="analogRead("
+      // Store the index of the found string
+      target = arduinoCode.indexOf(toSearch);
+      // Store only the desired string
+      let stringFound = arduinoCode.substring(target, target+toSearch.length);
+      arduinoCode = arduinoCode.replace(stringFound, "");
+      //console.log(target);
+      //console.log(stringFound);
+      
+      analogCount++;
+    }
+    while (target != -1);
+
+    // Collect all of the console prints and store into a string to compare to expected output
+    let outputString = "";
+    do {
+      // String to search for, returns -1 if not found, CURRENTLY CASE SENSITIVE AND PICKUPS COMMENTS
+      let toSearch="Serial.print"
+      // Store the index of the found string
+      target = arduinoCode.indexOf(toSearch);
+
+      // Find the index of the next existing colon, which is the end of the string
+      let arduinoCodeArray = arduinoCode;
+      arduinoCodeArray.split("");//.forEach(character => console.log(character));
+      let index = target;
+      let endIndex = target;
+      while(target != -1) {
+        if(arduinoCodeArray[index] == ';') {
+          endIndex = index;
+          break;
+        }
+        index = index+1;
+      }
+      
+      //Next, check to see if the print has ln
+      let stringFound = "";
+      let findLN = arduinoCode.substring(target+12, target+14);
+      //console.log(stringFound);
+      if(findLN == "ln") {
+
+        stringFound = arduinoCode.substring(target+15, endIndex-1)
+      }
+      else {
+        stringFound = arduinoCode.substring(target+13, endIndex-1)
+      }
+
+      // There are three posibilities we have to account for with the newly captured string.
+      // 1. The string captured is a string, we just need to get rid of the double quotes.
+      let exampleTest = stringFound.substring(0, 1);
+      if(exampleTest == '"') {
+        console.log("String Captured!");
+        // Add some code to take the double quotes off of the 
+      }
+      // 2. The string captured is a string variable, and we need to find where the variable is defined.
+      else {
+        console.log("Variable Captured!");
+        // 3. Possibility 2 leads to another possibility that the variable is a parameter from a function call and is defined as a different variable name.
+        // Read arduinoCode to search for the first instance of the variable being declared.
+          //This leads to two possibilities,
+          // 1. We find the variable and can capture the string within the double quotes
+          // 2. We find that the variable is a parameter of a function
+            // From here we will have to find where the function is called.
+      }
+
+      // Add to string
+      outputString = outputString + stringFound;
+      target = -1;
+    }
+    while (target != -1);
+
+    console.log("Number of Digital Inputs: " + digInCount);
+    console.log("Number of Interrupts: " + interruptCount);
+    console.log("Number of Digital Outputs: " + digOutCount);
+    console.log("Number of PWM Ouputs: " + PWMCount);
+    console.log("Number of Analog Outputs: " + analogCount);
+    console.log(outputString);
+
+    console.log("This is the auto submit button!");
+  };
   const handleVerify = async () => {
     if (showConsole || showPlotter) {
       message.warning(
         'Close Serial Monitor and Serial Plotter before uploading your code'
       );
     } else {
-      //if (typeof window['port'] === 'undefined') {
-      //  await connectToPort();
-      //}
-      //if (typeof window['port'] === 'undefined') {
-      //  message.error('Fail to select serial device');
-      //  return;
-      //}
       // call Virtual Compiler
       const arduinoCode = getArduino(workspaceRef.current, false);
       console.log('Start');
       console.log(arduinoCode);
       console.log('End');
       
-      //const runCode = async() => {
       // Compile the Arduino source code
       // Take the source code, and translate into machine code
       const result = await fetch('https://hexi.wokwi.com/build', {
@@ -337,8 +510,6 @@ export default function StudentCanvas({ activity }) {
       else {
         console.log('Compile Successful!');
       }
-      
-      //}
     }
   };
   const handleCompile = async () => {
@@ -506,6 +677,15 @@ export default function StudentCanvas({ activity }) {
                       id='action-btn-container'
                       className='flex space-around'
                     >
+                      <AutoSubmit
+                        setHoverAutoSub={setHoverAutoSub}
+                        handleAutoSub={handleAutoSub}
+                      />
+                      {hoverAutoSub && (
+                        <div className='popup ModalCompile'>
+                          Auto submit
+                        </div>
+                      )}
                       <ArduinoVerify
                         setHoverVerify={setHoverVerify}
                         handleVerify={handleVerify}

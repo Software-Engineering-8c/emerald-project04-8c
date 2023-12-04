@@ -88,9 +88,9 @@ export const compileArduinoCode = async (
   }
   // Get the submission Id and send a request to get the submission every
   // 0.25 second until the submission status equal to COMPLETE.
-  intervalId = setInterval(
+  intervalId = setInterval( 
     () =>
-      getAndFlashSubmission(
+      getAndFlashSubmission( // It is at this function call that it is trying to flash. we want to replace this with a verify somehow.
         initialSubmission.data.id,
         path,
         isStudent,
@@ -124,6 +124,8 @@ const getAndFlashSubmission = async (
 ) => {
   // get the submission
   const response = await getSubmission(id, path, isStudent);
+
+
   // If we fail to retrive submission
   if (!response.data) {
     if (intervalId) {
@@ -148,8 +150,9 @@ const getAndFlashSubmission = async (
     clearInterval(intervalId);
     intervalId = undefined;
   }
+
   // flash the board with the output
-  await flashArduino(response, setSelectedCompile, setCompileError);
+  await flashArduino(response, setSelectedCompile, setCompileError); // we want to change flash to verify
 };
 
 const flashArduino = async (response, setSelectedCompile, setCompileError) => {

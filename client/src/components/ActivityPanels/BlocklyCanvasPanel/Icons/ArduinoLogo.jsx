@@ -9,7 +9,7 @@ const ArduinoLogo = ({ setHoverCompile, handleCompile }) => {
         width='40px'
         height='20px'
         align='center'
-        viewBox='450 280 300 300'
+        viewBox='450 280 300 300' //viewBox='450 280 300 300'
         preserveAspectRatio='xMidYMid'
         onMouseEnter={() => setHoverCompile(true)}
         onMouseLeave={() => setHoverCompile(false)}
@@ -20,7 +20,7 @@ const ArduinoLogo = ({ setHoverCompile, handleCompile }) => {
           Created by potrace 1.10, written by Peter Selinger 2001-2011
         </metadata>
         <g
-          transform='matrix(0.1, 0, 0, -0.1, 0, 1200)'
+          transform='matrix(0.1, 0, 0, -0.1, 0, 1200)' //transform='matrix(0.1, 0, 0, -0.1, 0, 1200)'
           fill='#000000'
           stroke='none'
         >
