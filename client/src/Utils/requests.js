@@ -1,6 +1,6 @@
-import {server} from './hosts';
+import { server } from './hosts';
 import axios from 'axios';
-import {getToken} from './AuthRequests';
+import { getToken } from './AuthRequests';
 
 const GET = 'GET';
 const PUT = 'PUT';
@@ -188,25 +188,6 @@ export const updateStudent = async (id, student) =>
     auth: true,
     error: 'Failed to update student.',
   });
-
-export const updateStudentScore = async (id, student, score) => {
-    try {
-        return await makeRequest({
-            method: PUT,
-            path: `${server}/students/${id}`,
-            data: {
-                student,
-                score: score,
-            },
-            auth: true,
-            error: 'Failed to update student.',
-        });
-    } catch (error) {
-        console.error('Error updating student score:', error);
-        throw error;
-    }
-};
-
 
 export const getUnits = async (id) =>
   makeRequest({
@@ -495,8 +476,7 @@ export const updateActivityDetails = async (
   link,
   scienceComponents,
   makingComponents,
-  computationComponents,
-  rubricData
+  computationComponents
 ) =>
   makeRequest({
     method: PUT,
@@ -511,7 +491,6 @@ export const updateActivityDetails = async (
       scienceComponents,
       makingComponents,
       computationComponents,
-        rubricData
     },
     auth: true,
     error: 'Failed to update unit',
@@ -693,21 +672,3 @@ export const getClassroomWorkspace = async (id) =>
     auth: true,
     error: 'Unable to retrive classroom workspaces',
   });
-
-export const getRubrics = async () =>
-    makeRequest({
-        method: GET,
-        path: `${server}/rubrics`,
-        auth: true,
-        error: 'Rubrics could not be retrieved.',
-    });
-
-export const createRubric = async (rubricData) =>
-    makeRequest({
-        method: POST,
-        path: `${server}/rubrics`,
-        data: rubricData,
-        auth: true,
-        error: 'Failed to create rubric.',
-    });
-

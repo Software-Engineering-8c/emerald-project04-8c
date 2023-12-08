@@ -136,7 +136,6 @@ export default function Roster({ classroomId }) {
       let student = classroom.students.find((student) => student.id === key);
       for (let attribute in row) student[attribute] = row[attribute];
       if (student) {
-        // let score = student.score
         const res = await updateStudent(student.id, student);
         if (res.data) {
           message.success(

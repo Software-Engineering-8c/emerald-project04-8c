@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState, useReducer } from 'react';
+import { Modal, Button } from 'antd';
 import { Link } from 'react-router-dom';
 import '../../ActivityLevels.less';
-import { compileArduinoCode } from '../../Utils/helpers';
+import { compileArduinoCode, getArduino, handleSave } from '../../Utils/helpers'; // CHANGE OCCURED HERE, ADDED "getArduino" and "handleSave"
 import { message, Spin, Row, Col, Alert, Menu, Dropdown } from 'antd';
 import CodeModal from '../modals/CodeModal';
 import ConsoleModal from '../modals/ConsoleModal';
@@ -13,12 +14,17 @@ import {
 } from '../../Utils/consoleHelpers';
 import ArduinoLogo from '../Icons/ArduinoLogo';
 import PlotterLogo from '../Icons/PlotterLogo';
+import ArduinoVerify from '../Icons/ArduinoVerify';
+import AutoSubmit from '../Icons/AutoSubmit';
+import './Auto_Grade.css';
 
 let plotId = 1;
 
 export default function PublicCanvas({ activity, isSandbox }) {
   const [hoverUndo, setHoverUndo] = useState(false);
   const [hoverRedo, setHoverRedo] = useState(false);
+  const [hoverVerify, setHoverVerify] = useState(false);
+  const [hoverAutoSub, setHoverAutoSub] = useState(false);
   const [hoverCompile, setHoverCompile] = useState(false);
   const [hoverConsole, setHoverConsole] = useState(false);
   const [showConsole, setShowConsole] = useState(false);
@@ -27,10 +33,12 @@ export default function PublicCanvas({ activity, isSandbox }) {
   const [connectionOpen, setConnectionOpen] = useState(false);
   const [selectedCompile, setSelectedCompile] = useState(false);
   const [compileError, setCompileError] = useState('');
-
+  const [autoSubLogs, setAutoSubLogs] = useState([]);
+  const [showAutoSubLogsModal, setShowAutoSubLogsModal] = useState(false);
   const [forceUpdate] = useReducer((x) => x + 1, 0);
   const workspaceRef = useRef(null);
   const activityRef = useRef(null);
+
 
   const setWorkspace = () => {
     workspaceRef.current = window.Blockly.inject('blockly-canvas', {
@@ -60,6 +68,7 @@ export default function PublicCanvas({ activity, isSandbox }) {
   };
 
   const handleConsole = async () => {
+    // console.print("HERE")
     if (showPlotter) {
       message.warning('Close serial plotter before openning serial monitor');
       return;
@@ -116,8 +125,388 @@ export default function PublicCanvas({ activity, isSandbox }) {
       setShowPlotter(false);
     }
   };
+  /* =============================================================================
+                                  STUDENT ADDED CODE START
+    FUNCTIONS DEFINED:
+        handleAutoSub():
+
+        handleVerify():
+     ============================================================================= */
+
+  function SearchInCode(stringToFind, arduinoCode) {
+      // code to be executed
+    var digInCount = -1;
+    let target = -1;
+    do {
+      // String to search for, returns -1 if not found, CURRENTLY CASE SENSITIVE AND PICKUPS COMMENTS
+      let toSearch=stringToFind
+      // Store the index of the found string
+      target = arduinoCode.indexOf(toSearch);
+      // Store only the desired string
+      let stringFound = arduinoCode.substring(target, target+toSearch.length);
+      arduinoCode = arduinoCode.replace(stringFound, "");
+      //console.log(target);
+      //console.log(stringFound);
+      
+      digInCount++;
+    }
+    while (target != -1);
+
+    return digInCount;
+  }
+
+  function DetectFrequency(arduinoCode, pinNum) {
+    let returnString = "";
+
+    // In this function we will be taking advantage of the sequeintal nature of the arduino code
+    // There are two ways to blink an LED
+
+    // Way No. 2, is using the PWM outputs, this is simply looking at the defined frequency of the PWM pin.
+    // First find the output being set to on or off
+
+    // Way No. 1, is turning an output on and off manually with a wait statement in between,
+      // This is where the sequentialism of the code will be taken care of.
+
+      // First look for the initial digital write
+    let toSearch = "digitalWrite(" + pinNum + ",";
+
+    let target = arduinoCode.indexOf(toSearch);
+
+    let stringFound = arduinoCode.substring(target, target+toSearch.length);
+
+    let initialVal = '';
+
+      // Determine if the digital write is low or high, this will tell us what digital write value to look for next
+    if(arduinoCode.substring(target+toSearch.length+1, target+toSearch.length+2) == 'L') {
+      stringFound = arduinoCode.substring(target, target+toSearch.length+6)
+      arduinoCode = arduinoCode.replace(stringFound, "");
+      initialVal = 'L';
+    }
+    else if(arduinoCode.substring(target+toSearch.length+1, target+toSearch.length+2) == 'H') {
+      stringFound = arduinoCode.substring(target, target+toSearch.length+7)
+      arduinoCode = arduinoCode.replace(stringFound, "");
+      initialVal = 'H';
+    }
+
+
+      // From here we are searching for the first delay to determine 
+    toSearch = "delay(";
+
+    target = arduinoCode.indexOf(toSearch);
+
+    // Find the index of the next existing colon, which is the end of the string
+    let arduinoCodeArray = arduinoCode;
+    arduinoCodeArray.split("");//.forEach(character => console.log(character));
+    let index = target;
+    let endIndex = target;
+    while(target != -1) {
+      if(arduinoCodeArray[index] == ';') {
+        endIndex = index;
+        break;
+      }
+      index = index+1;
+    }
+
+      // At this point the first delay value has been found and stored into firstWait
+    let firstWait = arduinoCode.substring(target+6, endIndex-1);
+
+      // The first delay is now removed to find the next delay
+    stringFound = arduinoCode.substring(target, endIndex+1);
+    arduinoCode = arduinoCode.replace(stringFound, "");
+
+
+    // Now we want to look for an assertion of a high or low again to confirm the code is working correctly
+    toSearch = "digitalWrite(" + pinNum + ",";
+
+    target = arduinoCode.indexOf(toSearch);
+
+    stringFound = arduinoCode.substring(target, target+toSearch.length);
+  
+    // Determine if the digital write is low or high, this will tell us what digital write value to look for next
+      // Find the character whether it be 'L' for LOW or 'H' for HIGH
+    let nextVal = arduinoCode.substring(target+toSearch.length+1, target+toSearch.length+2);
+
+    let finalOutput = "";
+
+    if((target == -1) || (initialVal == nextVal)) {
+      // IF this occurs it means the student never re-asserted the pin and the code won't function correctly
+      finalOutput = "Error: Never changed the value of Pin: " + pinNum;
+    }
+    else if((initialVal == 'H') && (nextVal == 'L')) {
+      // Search for an assertion of LOW
+      finalOutput = "Correct H L";
+      stringFound = arduinoCode.substring(target, target+toSearch.length+6);
+    }
+    else if((initialVal == 'L') && (nextVal == 'H')) {
+      // Search for an assertion of LOW
+      finalOutput = "Correct L H";
+      stringFound = arduinoCode.substring(target, target+toSearch.length+7);
+    }
+    
+    // Now that the value was found, we get rid of the string from arduinoCode
+    arduinoCode = arduinoCode.replace(stringFound, "");
+
+    // Now look for the next delay value
+    // From here we are searching for the second delay to determine 
+    toSearch = "delay(";
+
+    target = arduinoCode.indexOf(toSearch);
+
+    // Find the index of the next existing colon, which is the end of the string
+    arduinoCodeArray = arduinoCode;
+    arduinoCodeArray.split("");//.forEach(character => console.log(character));
+    index = target;
+    endIndex = target;
+    while(target != -1) {
+      if(arduinoCodeArray[index] == ';') {
+        endIndex = index;
+        break;
+      }
+      index = index+1;
+    }
+
+      // At this point the first delay value has been found and stored into firstWait
+    let secondWait = arduinoCode.substring(target+6, endIndex-1);
+
+      // The first delay is now removed to find the next delay
+    stringFound = arduinoCode.substring(target, endIndex+1);
+    arduinoCode = arduinoCode.replace(stringFound, "");
+
+    var freq = 0;
+    var dutyCycle = 0;
+    // At this point, we have stored the first and second delay, along with if set to low or high
+      // The importance in knowing in whether low or high comes and when is so that we can also calculate the duty cycle.
+    // No we look to see which digital value goes with which delay
+    // Check if digital low is associated with the first delay
+    if(finalOutput == "Correct L H") {
+      // First digital value is low
+      dutyCycle = Number(secondWait) / (Number(firstWait) + Number(secondWait));
+
+      freq = 1 / ((Number(secondWait)+Number(firstWait))/1000);
+
+      dutyCycle = dutyCycle * 100;
+
+      //console.log("Frequency of Pin " + pinNum + ": " + freq + " Hz");
+      //console.log("Duty Cycle of Pin " + pinNum + ": " + dutyCycle + "%");
+      returnString = "Frequency of Pin " + pinNum + ": " + freq + " Hz";
+      returnString = returnString + "\n";
+      returnString = returnString + "Duty Cycle of Pin " + pinNum + ": " + dutyCycle + "%"
+    }
+    else if(finalOutput == "Correct H L") {
+      // First digital value is low
+      dutyCycle = Number(firstWait) / (Number(firstWait) + Number(secondWait));
+
+      freq = 1 / ((Number(secondWait)+Number(firstWait))/1000);
+
+      dutyCycle = dutyCycle * 100;
+
+      //console.log("Frequency of Pin " + pinNum + ": " + freq + " Hz");
+      //console.log("Duty Cycle of Pin " + pinNum + ": " + dutyCycle + "%");
+      returnString = "Frequency of Pin " + pinNum + ": " + freq + " Hz";
+      returnString = returnString + "\n";
+      returnString = returnString + "Duty Cycle of Pin " + pinNum + ": " + dutyCycle + "%"
+    }
+    else {
+      //console.log(finalOutput);
+      returnString = finalOutput;
+    }
+    return returnString;
+  }
+
+  function DetectConsoleOutput(arduinoCode) {
+    // Collect all of the console prints and store into a string to compare to expected output
+    let target = -1;
+    let outputString = "";
+    let counter = 0;
+    let stringFound = "";
+    do {
+      // This line adds the previously detected string to the output
+      outputString = outputString + stringFound;
+
+      counter = counter + 1;
+      // String to search for, returns -1 if not found, CURRENTLY CASE SENSITIVE AND PICKUPS COMMENTS
+      let toSearch="Serial.print"
+      // Store the index of the found string
+      target = arduinoCode.indexOf(toSearch);
+
+      // Find the index of the next existing colon, which is the end of the string
+      let arduinoCodeArray = arduinoCode;
+      arduinoCodeArray.split("");//.forEach(character => console.log(character));
+      let index = target;
+      let endIndex = target;
+      while(target != -1) {
+        if(arduinoCodeArray[index] == ';') {
+          endIndex = index;
+          break;
+        }
+        index = index+1;
+      }
+      
+      //Next, check to see if the print has ln
+      stringFound = "";
+      let ridString = "";
+      let findLN = arduinoCode.substring(target+12, target+14);
+      //console.log(stringFound);
+      if(findLN == "ln") {
+        
+        stringFound = arduinoCode.substring(target+16, endIndex-2)
+        stringFound = stringFound + "\n"
+        
+      }
+      else {
+        stringFound = arduinoCode.substring(target+14, endIndex-2)
+      }
+
+      // // There are three posibilities we have to account for with the newly captured string.
+      // // 1. The string captured is a string, we just need to get rid of the double quotes.
+      // let exampleTest = stringFound.substring(0, 1);
+      // if(exampleTest == '"') {
+      //   console.log("String Captured!");
+      //   // Add some code to take the double quotes off of the 
+      // }
+      // // 2. The string captured is a string variable, and we need to find where the variable is defined.
+      // else {
+      //   console.log("Variable Captured!");
+      //   // 3. Possibility 2 leads to another possibility that the variable is a parameter from a function call and is defined as a different variable name.
+      //   // Read arduinoCode to search for the first instance of the variable being declared.
+      //     //This leads to two possibilities,
+      //     // 1. We find the variable and can capture the string within the double quotes
+      //     // 2. We find that the variable is a parameter of a function
+      //       // From here we will have to find where the function is called.
+      // }
+
+      // Remove the detected string from arduino Code, so it isn't detected again
+      ridString = arduinoCode.substring(target, endIndex+1)
+      arduinoCode = arduinoCode.replace(ridString, "");
+    }
+    while (target != -1);
+
+    //console.log(arduinoCode);
+
+    return outputString;
+  }
+
+
+  const handleAutoSub = async () => {
+    /* =========================== PLACE HOLDER =========================== */
+    // The following code contains placeholders for what will eventually be filled in by variables that store
+    // data in the backend.
+    // These variables store the number of input and output variables.
+    const numOfDigIn  = 20;
+    const numOfInt    = 2;
+    const numOfDigOut = 20;
+    const numOfPWM    = 6;
+    const numOfAnIn   = 6;
+    /* =========================== PLACE HOLDER =========================== */
+
+    // The following variable stores the code as a string
+    let arduinoCode = getArduino(workspaceRef.current, false);
+    // Print arduinoCode string
+    console.log(arduinoCode);
+    // Print the arduinoCode variable type
+      //console.log(xtype(arduinoCode));
+    //Split the string arduinoCode, into an array of characters
+      //arduinoCode.split("").forEach(character => console.log(character));
+
+    // The following two lines split the string into two sections with the divide being the desired string.
+      //const firstPart = arduinoCode.substring(0,target);
+      //const secondPart = arduinoCode.substring(target + toSearch.length, arduinoCode.length)
+
+    // First look for number of digital inputs
+    let digInCount = SearchInCode("INPUT);", arduinoCode);
+
+    // Next look for number of interrupts
+    let interruptCount = SearchInCode("attachInterrupt(", arduinoCode);
+
+    // Next look for number of digital outputs
+    let digOutCount = SearchInCode("OUTPUT);", arduinoCode);
+
+    // Next look for number of PWM outputs
+    let PWMCount = SearchInCode("analogWrite(", arduinoCode);
+
+    // Next look for number of analog inputs
+    let analogCount = SearchInCode("analogRead(", arduinoCode);
+
+    // Instead of console.log, add the log messages to the state variable
+    let digIn = "Number of Digital Inputs: " + digInCount;
+    console.log("Number of Digital Inputs: " + digInCount);
+    setAutoSubLogs((prevLogs) => [...prevLogs, digIn]);
+
+    let intIn = "Number of Interrupts: " + interruptCount;
+    console.log( "Number of Interrupts: " + interruptCount);
+    setAutoSubLogs((prevLogs) => [...prevLogs, intIn]);
+
+    let digOut = "Number of Digital Outputs: " + digOutCount;
+    console.log("Number of Digital Outputs: " + digOutCount);
+    setAutoSubLogs((prevLogs) => [...prevLogs, digOut]);
+
+    let pwmOut = "Number of PWM Ouputs: " + PWMCount;
+    console.log("Number of PWM Ouputs: " + PWMCount);
+    setAutoSubLogs((prevLogs) => [...prevLogs, pwmOut]);
+
+    let anaOut = "Number of Analog Outputs: " + analogCount;
+    console.log( "Number of Analog Outputs: " + analogCount);
+    setAutoSubLogs((prevLogs) => [...prevLogs, anaOut]);
+
+    let frequencyString = DetectFrequency(arduinoCode, 2);
+    console.log(frequencyString);
+    setAutoSubLogs((prevLogs) => [...prevLogs, frequencyString]);
+
+    console.log("Printed output:");
+    let outputString = "Printed output:" +  DetectConsoleOutput(arduinoCode);
+    setAutoSubLogs((prevLogs) => [...prevLogs, outputString]);
+
+    let completed = "This is the auto submit button!";
+    setAutoSubLogs((prevLogs) => [...prevLogs, completed]);
+    console.log("This is the auto submit button!");
+
+    // Set the logs
+    setAutoSubLogs([...autoSubLogs, digIn, intIn, digOut, pwmOut, anaOut, frequencyString, outputString]);
+
+    // Show the modal
+    setShowAutoSubLogsModal(true);
+  };
+
+
+  const handleVerify = async () => {
+    if (showConsole || showPlotter) {
+      message.warning(
+        'Close Serial Monitor and Serial Plotter before uploading your code'
+      );
+    } else {
+      // call Virtual Compiler
+      const arduinoCode = getArduino(workspaceRef.current, false);
+      console.log('Start');
+      console.log(arduinoCode);
+      console.log('End');
+      
+      // Compile the Arduino source code
+      // Take the source code, and translate into machine code
+      const result = await fetch('https://hexi.wokwi.com/build', {
+        method: 'post',
+        body: JSON.stringify({sketch: arduinoCode}),// This is the code we want to translate as a JSON object
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const {hex, stderr} = await result.json();
+      if(!hex) { // If no hex is returned, then there was a compile error
+        alert(stderr);
+        return;
+      }
+      else {
+        console.log('Compile Successful!');
+      }
+    }
+  };
+
+  /* =============================================================================
+                                  STUDENT ADDED CODE END
+     ============================================================================= */
+
 
   const handleCompile = async () => {
+    console.log("HERE");
     if (showConsole || showPlotter) {
       message.warning(
         'Close Serial Monitor and Serial Plotter before uploading your code'
@@ -239,6 +628,43 @@ export default function PublicCanvas({ activity, isSandbox }) {
                       id='action-btn-container'
                       className='flex space-around'
                     >
+                      <div className="auto-submission-container">
+                        <AutoSubmit
+                            setHoverAutoSub={setHoverAutoSub}
+                            handleAutoSub={handleAutoSub}
+                        />
+
+                        {showAutoSubLogsModal && (
+                            <div className="auto-sub-logs-modal">
+                              <h2>Auto Submit Logs</h2>
+                              <ul>
+                                {autoSubLogs.map((log, index) => (
+                                    <li key={index}>{log}</li>
+                                ))}
+                              </ul>
+                              <button onClick={() => {
+                                setAutoSubLogs([]);
+                                setShowAutoSubLogsModal(false);
+                              }}>
+                                Close
+                              </button>
+                            </div>
+                        )}
+                      </div>
+                      {hoverAutoSub && (
+                        <div className='popup ModalCompile'>
+                          Auto submit
+                        </div>
+                      )}
+                      <ArduinoVerify
+                        setHoverVerify={setHoverVerify}
+                        handleVerify={handleVerify}
+                      />
+                      {hoverVerify && (
+                        <div className='popup ModalCompile'>
+                          Verify code
+                        </div>
+                      )}
                       <ArduinoLogo
                         setHoverCompile={setHoverCompile}
                         handleCompile={handleCompile}
