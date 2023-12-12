@@ -123,11 +123,36 @@ export default function PublicCanvas({ activity, isSandbox }) {
   };
   /* =============================================================================
                                   STUDENT ADDED CODE START
-    FUNCTIONS DEFINED:
-        handleAutoSub():
+    MAIN FUNCTIONS DEFINED:
+        handleAutoSub(): This function when called will run the auto submit code, this entails
+          - Counting the number of various types of inputs/outputs
+          - Determines the frequency of a desired pin
+            - At the moment the desired pin is in the function call to DetectFrequency()
 
-        handleVerify():
-     ============================================================================= */
+        handleVerify(): This function runs the verify/compile equivalent for the arduino code without needing an arduino connected
+    
+    HELPER FUNCIONS DEFINED:
+        SearchInCode(stringToFind, arduinoCode):
+          - INPUTS: 
+            - stringToFind: pass a string that you want to find in student code. 
+            - arduinoCode: A string of the student code.
+          - OUTPUTS:
+            - Returns the number of times the stringToFind occurs in the student code. 
+
+        DetectFrequency(arduinoCode, pinNum):
+          - INPUTS:
+            - arduinoCode: a string of the student code. 
+            - pinNum: The associated pin number in which to find the output frequency for. 
+          - OUTPUTS:
+            - returnString: returns a string that prints out the frequency and duty cycle of the pin
+
+        DetectConsoleOutput(arduinoCode):
+          - INPUTS:
+            - arduinoCode: a string of the student code. 
+          - OUTPUTS:
+            - returnString: returns a string with the found console output of the student code.
+
+    ============================================================================= */
 
   function SearchInCode(stringToFind, arduinoCode) {
       // code to be executed
@@ -152,6 +177,7 @@ export default function PublicCanvas({ activity, isSandbox }) {
   }
 
   function DetectFrequency(arduinoCode, pinNum) {
+    let returnString = "";
 
     // In this function we will be taking advantage of the sequeintal nature of the arduino code
     // There are two ways to blink an LED
@@ -281,8 +307,11 @@ export default function PublicCanvas({ activity, isSandbox }) {
 
       dutyCycle = dutyCycle * 100;
 
-      console.log("Frequency of Pin " + pinNum + ": " + freq + " Hz");
-      console.log("Duty Cycle of Pin " + pinNum + ": " + dutyCycle + "%");
+      //console.log("Frequency of Pin " + pinNum + ": " + freq + " Hz");
+      //console.log("Duty Cycle of Pin " + pinNum + ": " + dutyCycle + "%");
+      returnString = "Frequency of Pin " + pinNum + ": " + freq + " Hz";
+      returnString = returnString + "\n";
+      returnString = returnString + "Duty Cycle of Pin " + pinNum + ": " + dutyCycle + "%"
     }
     else if(finalOutput == "Correct H L") {
       // First digital value is low
@@ -292,12 +321,17 @@ export default function PublicCanvas({ activity, isSandbox }) {
 
       dutyCycle = dutyCycle * 100;
 
-      console.log("Frequency of Pin " + pinNum + ": " + freq + " Hz");
-      console.log("Duty Cycle of Pin " + pinNum + ": " + dutyCycle + "%");
+      //console.log("Frequency of Pin " + pinNum + ": " + freq + " Hz");
+      //console.log("Duty Cycle of Pin " + pinNum + ": " + dutyCycle + "%");
+      returnString = "Frequency of Pin " + pinNum + ": " + freq + " Hz";
+      returnString = returnString + "\n";
+      returnString = returnString + "Duty Cycle of Pin " + pinNum + ": " + dutyCycle + "%"
     }
     else {
-      console.log(finalOutput);
+      //console.log(finalOutput);
+      returnString = finalOutput;
     }
+    return returnString;
   }
 
   function DetectConsoleOutput(arduinoCode) {
@@ -368,7 +402,7 @@ export default function PublicCanvas({ activity, isSandbox }) {
     }
     while (target != -1);
 
-    console.log(arduinoCode);
+    //console.log(arduinoCode);
 
     return outputString;
   }
@@ -412,18 +446,23 @@ export default function PublicCanvas({ activity, isSandbox }) {
 
     // Next look for number of analog inputs
     let analogCount = SearchInCode("analogRead(", arduinoCode);
+    
+    let digIn = "Number of Digital Inputs: " + digInCount;
+    console.log(digIn);
+    let intIn = "Number of Interrupts: " + interruptCount;
+    console.log(intIn);
+    let digOut = "Number of Digital Outputs: " + digOutCount;
+    console.log(digOut);
+    let pwmOut = "Number of PWM Ouputs: " + PWMCount;
+    console.log(pwmOut);
+    let anaOut = "Number of Analog Outputs: " + analogCount;
+    console.log(anaOut);
+    let frequencyString = DetectFrequency(arduinoCode, 2);
+    console.log(frequencyString);
 
-    let outputString = DetectConsoleOutput(arduinoCode);
-
-    console.log("Number of Digital Inputs: " + digInCount);
-    console.log("Number of Interrupts: " + interruptCount);
-    console.log("Number of Digital Outputs: " + digOutCount);
-    console.log("Number of PWM Ouputs: " + PWMCount);
-    console.log("Number of Analog Outputs: " + analogCount);
     console.log("Printed output:");
+    let outputString = DetectConsoleOutput(arduinoCode);
     console.log(outputString);
-
-    DetectFrequency(arduinoCode, 2);
 
     console.log("This is the auto submit button!");
   };
