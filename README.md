@@ -134,6 +134,24 @@ All of the deployments and releases are handled automatically with [GitHub Actio
 - **hotfix/<`scaffold`>-<`fix-name`>** - Based off of master
   - ex. **hotfix/client-cors**
 
+- 
+List of all project features implemented and associated screenshots of features developed
+  - Auto-grading
+  - Verification of code without arduino
+  - front-end grading rubric
+  - front-end grading template for manual and auto grading
+  - Teacher feedback for student assignments
+  - Teacher view of students
+Instructions for how to run the project locally
+     Follow the instructions earlier in the document, there are no changes for startup
+    - Once running, any auto-grading implementations are in the sandbox
+    - Any of the teacher template/ rubrics are on the admin/teacher side of CASMM
+Outstanding work
+  - Auto-grading algorithm accounts for the hardware of the circuit.
+  - front-end manual grading rubric accounts for the value of each assignment requirement.
+Credit people/organizations you borrowed code from  or APIs you used - e.g., Bootstrap,  emails, authentication etc
+  - Source used of verify functionality
+      - https://hexi.wokwi.com/build
 ### Pull Requests
 
 Before submitting a pull request, rebase the feature branch into the target branch to resolve any merge conflicts.
